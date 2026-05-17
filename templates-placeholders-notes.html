@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Templates Groupon — Placeholders & Aperçu Live</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #f0f2f5; color: #333; }
+
+  /* ── LAYOUT ── */
+  .app { display: grid; grid-template-columns: 380px 1fr; min-height: 100vh; }
+
+  /* ── PANNEAU GAUCHE ── */
+  .panel {
+    background: #1a1a2e;
+    color: #eee;
+    padding: 24px 20px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #0f3460 #1a1a2e;
+  }
+  .panel::-webkit-scrollbar { width: 5px; }
+  .panel::-webkit-scrollbar-track { background: #1a1a2e; }
+  .panel::-webkit-scrollbar-thumb { background: #0f3460; border-radius: 4px; }
+
+  .panel-title {
+    font-size: 15px; color: #f97316; margin-bottom: 20px;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-title {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+    color: #f97316; border-top: 1px solid #0f3460;
+    padding-top: 14px; margin: 18px 0 10px;
+  }
+  .field-group { margin-bottom: 14px; }
+  .field-group label {
+    display: block; font-size: 11px; color: #999; margin-bottom: 5px;
+    text-transform: uppercase; letter-spacing: .5px;
+  }
+  .field-group input,
+  .field-group textarea {
+    width: 100%; padding: 9px 11px;
+    background: #16213e; border: 1px solid #0f3460;
+    color: #fff; border-radius: 7px; font-size: 13px;
+    transition: border .2s, box-shadow .2s;
+  }
+  .field-group input:focus,
+  .field-group textarea:focus {
+    border-color: #f97316; outline: none;
+    box-shadow: 0 0 0 3px rgba(249,115,22,.15);
+  }
+  .field-group textarea { resize: vertical; min-height: 70px; }
+  .field-hint { font-size: 11px; color: #555; margin-top: 4px; }
+  .preview-img-mini {
+    margin-top: 6px; max-width: 100%; max-height: 70px;
+    border-radius: 5px; display: none; border: 1px solid #0f3460; object-fit: cover;
+  }
+  .btn-reset {
+    width: 100%; padding: 11px; margin-top: 22px;
+    background: #0f3460; color: #fff; border: none;
+    border-radius: 8px; cursor: pointer; font-size: 13px;
+    transition: background .2s; letter-spacing: .5px;
+  }
+  .btn-reset:hover { background: #f97316; }
+
+  /* ── ZONE APERÇUS ── */
+  .previews { padding: 30px 34px; overflow-y: auto; }
+  .previews > h1 {
+    font-size: 20px; margin-bottom: 26px; color: #1a1a2e;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .previews > h1 span { font-size: 13px; color: #999; font-weight: normal; }
+
+  .template-block {
+    background: #fff; border-radius: 12px;
+    box-shadow: 0 2px 16px rgba(0,0,0,.07);
+    margin-bottom: 34px; overflow: hidden;
+  }
+  .template-header {
+    background: #1a1a2e; color: #f97316;
+    padding: 11px 18px; font-size: 12px; font-weight: bold;
+    text-transform: uppercase; letter-spacing: 1px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .btn-copy {
+    background: #f97316; color: #fff; border: none;
+    padding: 5px 12px; border-radius: 5px; cursor: pointer;
+    font-size: 11px; transition: background .2s; letter-spacing: .3px;
+  }
+  .btn-copy:hover { background: #ea6d0e; }
+  .btn-copy.copied { background: #22c55e; }
+  .template-body { padding: 22px 26px; }
+
+  /* ── TEMPLATE A — Bannière image + CTA ── */
+  .tpl-a .banner {
+    width: 100%; height: 210px; object-fit: cover;
+    border-radius: 8px; display: block;
+  }
+  .tpl-a .img-placeholder {
+    width: 100%; height: 210px; background: #f0f2f5; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    color: #bbb; font-size: 13px; border: 2px dashed #ddd;
+  }
+  .tpl-a h2 { margin: 16px 0 8px; font-size: 22px; color: #1a1a2e; }
+  .tpl-a .subtitle-tag {
+    display: inline-block; background: #fff0e6; color: #f97316;
+    font-size: 11px; padding: 3px 9px; border-radius: 20px; margin-bottom: 10px;
+  }
+  .tpl-a p { font-size: 14px; color: #555; line-height: 1.7; }
+  .tpl-a .cta {
+    display: inline-block; margin-top: 16px; padding: 11px 24px;
+    background: #f97316; color: #fff; border-radius: 7px;
+    text-decoration: none; font-size: 14px; font-weight: bold;
+    transition: background .2s;
+  }
+  .tpl-a .cta:hover { background: #ea6d0e; }
+
+  /* ── TEMPLATE B — Vidéo + description ── */
+  .tpl-b .video-wrap {
+    position: relative; padding-bottom: 56.25%;
+    background: #000; border-radius: 8px; overflow: hidden;
+  }
+  .tpl-b .video-wrap iframe {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%; border: 0;
+  }
+  .tpl-b .video-placeholder {
+    background: #16213e; border-radius: 8px; height: 190px;
+    display: flex; align-items: center; justify-content: center;
+    color: #666; font-size: 13px; border: 2px dashed #0f3460;
+  }
+  .tpl-b h2 { margin: 16px 0 8px; font-size: 20px; color: #1a1a2e; }
+  .tpl-b p { font-size: 14px; color: #555; line-height: 1.7; }
+  .tpl-b .link-sec {
+    display: inline-block; margin-top: 12px;
+    color: #f97316; font-size: 14px; text-decoration: underline;
+  }
+
+  /* ── TEMPLATE C — Texte long + lien ── */
+  .tpl-c { background: #fffaf6; }
+  .tpl-c .label-top {
+    font-size: 11px; text-transform: uppercase; color: #f97316;
+    letter-spacing: 1px; margin-bottom: 8px;
+  }
+  .tpl-c h2 { font-size: 24px; color: #1a1a2e; margin-bottom: 12px; }
+  .tpl-c .body-text {
+    font-size: 14px; color: #444; line-height: 1.8;
+    margin-bottom: 18px; white-space: pre-line;
+  }
+  .tpl-c .link {
+    color: #f97316; font-size: 14px; text-decoration: underline;
+  }
+  .tpl-c .cta {
+    display: inline-block; margin-top: 14px; padding: 10px 22px;
+    background: #1a1a2e; color: #fff; border-radius: 7px;
+    text-decoration: none; font-size: 13px; margin-left: 14px;
+  }
+
+  /* ── TEMPLATE D — Vignette + texte côte à côte ── */
+  .tpl-d .row { display: flex; gap: 20px; align-items: flex-start; }
+  .tpl-d .thumb {
+    width: 150px; height: 120px; object-fit: cover;
+    border-radius: 8px; flex-shrink: 0;
+  }
+  .tpl-d .thumb-placeholder {
+    width: 150px; height: 120px; background: #f0f2f5;
+    border-radius: 8px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: #bbb; font-size: 12px; border: 2px dashed #ddd;
+  }
+  .tpl-d .tag-label {
+    display: inline-block; background: #fff0e6; color: #f97316;
+    font-size: 11px; padding: 2px 8px; border-radius: 20px; margin-bottom: 6px;
+  }
+  .tpl-d h3 { font-size: 17px; color: #1a1a2e; margin-bottom: 6px; }
+  .tpl-d p { font-size: 13px; color: #666; line-height: 1.6; }
+  .tpl-d .link { color: #f97316; font-size: 13px; text-decoration: underline; display: inline-block; margin-top: 8px; }
+
+  /* ── TEMPLATE E — Image + texte + deux CTA ── */
+  .tpl-e .hero { position: relative; border-radius: 8px; overflow: hidden; }
+  .tpl-e .hero img {
+    width: 100%; height: 230px; object-fit: cover; display: block;
+  }
+  .tpl-e .hero-placeholder {
+    width: 100%; height: 230px; background: #f0f2f5;
+    display: flex; align-items: center; justify-content: center;
+    color: #bbb; font-size: 13px; border: 2px dashed #ddd; border-radius: 8px;
+  }
+  .tpl-e .hero-overlay {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 18px 20px;
+    background: linear-gradient(transparent, rgba(0,0,0,.65));
+    color: #fff;
+  }
+  .tpl-e .hero-overlay h2 { font-size: 22px; }
+  .tpl-e .hero-overlay .sub { font-size: 13px; opacity: .8; margin-top: 4px; }
+  .tpl-e .actions { margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap; }
+  .tpl-e .btn-primary {
+    padding: 10px 22px; background: #f97316; color: #fff;
+    border-radius: 7px; text-decoration: none; font-size: 13px; font-weight: bold;
+  }
+  .tpl-e .btn-secondary {
+    padding: 10px 22px; background: #fff; color: #1a1a2e;
+    border: 2px solid #1a1a2e; border-radius: 7px;
+    text-decoration: none; font-size: 13px; font-weight: bold;
+  }
+  .tpl-e p { margin-top: 14px; font-size: 14px; color: #555; line-height: 1.7; }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ═══════════════════════════════════════
+       PANNEAU DE SAISIE
+  ════════════════════════════════════════ -->
+  <aside class="panel">
+    <div class="panel-title">🎛 Placeholders</div>
+
+    <!-- TEXTES -->
+    <div class="section-title">📝 Textes</div>
+
+    <div class="field-group">
+      <label>Titre principal</label>
+      <input type="text" id="f-title" placeholder="Ex : Spa Luxe à Paris" oninput="updateAll()">
+    </div>
+
+    <div class="field-group">
+      <label>Sous-titre / Label</label>
+      <input type="text" id="f-subtitle" placeholder="Ex : Bien-être & Détente" oninput="updateAll()">
+    </div>
+
+    <div class="field-group">
+      <label>Description courte</label>
+      <textarea id="f-desc-short" placeholder="1-2 phrases résumant l'offre…" oninput="updateAll()"></textarea>
+    </div>
+
+    <div class="field-group">
+      <label>Corps de texte (description longue)</label>
+      <textarea id="f-desc-long" placeholder="Texte complet de l'offre…" oninput="updateAll()" style="min-height:100px;"></textarea>
+    </div>
+
+    <!-- IMAGE -->
+    <div class="section-title">🖼 Images</div>
+
+    <div class="field-group">
+      <label>URL image principale</label>
+      <input type="url" id="f-img" placeholder="https://…" oninput="updateAll(); miniPreview(this,'prev-img-main')">
+      <img id="prev-img-main" class="preview-img-mini" alt="aperçu">
+    </div>
+
+    <div class="field-group">
+      <label>URL vignette (thumbnail)</label>
+      <input type="url" id="f-thumb" placeholder="https://…" oninput="updateAll(); miniPreview(this,'prev-img-thumb')">
+      <img id="prev-img-thumb" class="preview-img-mini" alt="aperçu">
+    </div>
+
+    <!-- VIDÉO -->
+    <div class="section-title">🎬 Vidéo</div>
+
+    <div class="field-group">
+      <label>URL embed vidéo</label>
+      <input type="url" id="f-video" placeholder="https://www.youtube.com/embed/…" oninput="updateAll()">
+      <div class="field-hint">YouTube : youtube.com/embed/VIDEO_ID</div>
+    </div>
+
+    <!-- LIENS -->
+    <div class="section-title">🔗 Liens & CTA</div>
+
+    <div class="field-group">
+      <label>URL bouton CTA principal</label>
+      <input type="url" id="f-cta-url" placeholder="https://www.groupon.fr/…" oninput="updateAll()">
+    </div>
+
+    <div class="field-group">
+      <label>Texte du bouton CTA principal</label>
+      <input type="text" id="f-cta-text" placeholder="Profiter de l'offre" oninput="updateAll()">
+    </div>
+
+    <div class="field-group">
+      <label>URL lien secondaire</label>
+      <input type="url" id="f-link-url" placeholder="https://…" oninput="updateAll()">
+    </div>
+
+    <div class="field-group">
+      <label>Texte du lien secondaire</label>
+      <input type="text" id="f-link-text" placeholder="En savoir plus" oninput="updateAll()">
+    </div>
+
+    <button class="btn-reset" onclick="resetAll()">↺ Réinitialiser tous les champs</button>
+  </aside>
+
+  <!-- ═══════════════════════════════════════
+       ZONE APERÇUS
+  ════════════════════════════════════════ -->
+  <main class="previews">
+    <h1>Aperçu des templates <span>— mise à jour en temps réel</span></h1>
+
+    <!-- ── TEMPLATE A : Bannière image + CTA ── -->
+    <div class="template-block tpl-a">
+      <div class="template-header">
+        Template A — Bannière image + CTA
+        <button class="btn-copy" onclick="copyHTML('tpl-a-body', this)">Copier HTML</button>
+      </div>
+      <div class="template-body" id="tpl-a-body">
+        <div id="tpl-a-img-wrap">
+          <div class="img-placeholder">🖼 Image principale</div>
+        </div>
+        <span class="subtitle-tag" id="tpl-a-subtitle">Sous-titre</span>
+        <h2 id="tpl-a-title">Titre de l'offre</h2>
+        <p id="tpl-a-desc">Description courte de l'offre.</p>
+        <a id="tpl-a-cta" href="#" class="cta">Profiter de l'offre</a>
+      </div>
+    </div>
+
+    <!-- ── TEMPLATE B : Vidéo + description ── -->
+    <div class="template-block tpl-b">
+      <div class="template-header" style="background:#0f3460;">
+        Template B — Vidéo + description
+        <button class="btn-copy" onclick="copyHTML('tpl-b-body', this)">Copier HTML</button>
+      </div>
+      <div class="template-body" id="tpl-b-body">
+        <div id="tpl-b-video-wrap" class="video-placeholder">🎬 Vidéo embed</div>
+        <h2 id="tpl-b-title">Titre de l'offre</h2>
+        <p id="tpl-b-desc">Description courte.</p>
+        <a id="tpl-b-link" href="#" class="link-sec">En savoir plus</a>
+      </div>
+    </div>
+
+    <!-- ── TEMPLATE C : Texte long + lien + CTA ── -->
+    <div class="template-block tpl-c">
+      <div class="template-header" style="background:#16213e;">
+        Template C — Texte long + liens
+        <button class="btn-copy" onclick="copyHTML('tpl-c-body', this)">Copier HTML</button>
+      </div>
+      <div class="template-body" id="tpl-c-body">
+        <div class="label-top" id="tpl-c-subtitle">Sous-titre</div>
+        <h2 id="tpl-c-title">Titre de l'offre</h2>
+        <div class="body-text" id="tpl-c-desc-long">Corps du texte complet…</div>
+        <a id="tpl-c-link" href="#" class="link">En savoir plus</a>
+        <a id="tpl-c-cta" href="#" class="cta">Profiter de l'offre</a>
+      </div>
+    </div>
+
+    <!-- ── TEMPLATE D : Vignette + texte ── -->
+    <div class="template-block tpl-d">
+      <div class="template-header" style="background:#1a1a2e;">
+        Template D — Vignette + texte
+        <button class="btn-copy" onclick="copyHTML('tpl-d-body', this)">Copier HTML</button>
+      </div>
+      <div class="template-body" id="tpl-d-body">
+        <div class="row">
+          <div id="tpl-d-thumb-wrap">
+            <div class="thumb-placeholder">🖼 Vignette</div>
+          </div>
+          <div>
+            <span class="tag-label" id="tpl-d-subtitle">Label</span>
+            <h3 id="tpl-d-title">Titre</h3>
+            <p id="tpl-d-desc">Description courte.</p>
+            <a id="tpl-d-link" href="#" class="link">Voir l'offre →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TEMPLATE E : Hero image overlay + deux CTA ── -->
+    <div class="template-block tpl-e">
+      <div class="template-header" style="background:#111;">
+        Template E — Hero overlay + deux CTA
+        <button class="btn-copy" onclick="copyHTML('tpl-e-body', this)">Copier HTML</button>
+      </div>
+      <div class="template-body" id="tpl-e-body">
+        <div class="hero" id="tpl-e-hero-wrap">
+          <div class="hero-placeholder">🖼 Image principale</div>
+        </div>
+        <p id="tpl-e-desc">Description courte de l'offre.</p>
+        <div class="actions">
+          <a id="tpl-e-cta" href="#" class="btn-primary">Profiter de l'offre</a>
+          <a id="tpl-e-link" href="#" class="btn-secondary">En savoir plus</a>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  function g(id) { return document.getElementById(id); }
+  function val(id) { const el = g(id); return el ? el.value.trim() : ''; }
+
+  function updateAll() {
+    const title     = val('f-title')      || 'Titre de l\'offre';
+    const subtitle  = val('f-subtitle')   || 'Sous-titre';
+    const dShort    = val('f-desc-short') || 'Description courte de l\'offre.';
+    const dLong     = val('f-desc-long')  || 'Corps du texte complet…';
+    const imgUrl    = val('f-img');
+    const thumbUrl  = val('f-thumb');
+    const videoUrl  = val('f-video');
+    const ctaUrl    = val('f-cta-url')    || '#';
+    const ctaText   = val('f-cta-text')   || 'Profiter de l\'offre';
+    const linkUrl   = val('f-link-url')   || '#';
+    const linkText  = val('f-link-text')  || 'En savoir plus';
+
+    /* ── Template A ── */
+    setText('tpl-a-title', title);
+    setText('tpl-a-subtitle', subtitle);
+    setText('tpl-a-desc', dShort);
+    setLink('tpl-a-cta', ctaUrl, ctaText);
+    setImg('tpl-a-img-wrap', imgUrl, title, 'banner', '🖼 Image principale', 'img-placeholder');
+
+    /* ── Template B ── */
+    setText('tpl-b-title', title);
+    setText('tpl-b-desc', dShort);
+    setLink('tpl-b-link', linkUrl, linkText);
+    setVideo('tpl-b-video-wrap', videoUrl);
+
+    /* ── Template C ── */
+    setText('tpl-c-title', title);
+    setText('tpl-c-subtitle', subtitle);
+    setText('tpl-c-desc-long', dLong);
+    setLink('tpl-c-link', linkUrl, linkText);
+    setLink('tpl-c-cta', ctaUrl, ctaText);
+
+    /* ── Template D ── */
+    setText('tpl-d-title', title);
+    setText('tpl-d-subtitle', subtitle);
+    setText('tpl-d-desc', dShort);
+    setLink('tpl-d-link', linkUrl, linkText);
+    setImg('tpl-d-thumb-wrap', thumbUrl, title, 'thumb', '🖼 Vignette', 'thumb-placeholder');
+
+    /* ── Template E ── */
+    setText('tpl-e-desc', dShort);
+    setLink('tpl-e-cta', ctaUrl, ctaText);
+    setLink('tpl-e-link', linkUrl, linkText);
+    setHeroImg('tpl-e-hero-wrap', imgUrl, title, subtitle);
+  }
+
+  function setText(id, text) {
+    const el = g(id);
+    if (el) el.textContent = text;
+  }
+
+  function setLink(id, url, text) {
+    const el = g(id);
+    if (!el) return;
+    el.href = url;
+    el.textContent = text;
+  }
+
+  function setImg(wrapId, url, alt, imgClass, placeholderText, placeholderClass) {
+    const wrap = g(wrapId);
+    if (!wrap) return;
+    if (url) {
+      wrap.innerHTML = `<img class="${imgClass}" src="${escAttr(url)}" alt="${escAttr(alt)}" onerror="this.parentElement.innerHTML='<div class=\\'${placeholderClass}\\'>${placeholderText}</div>'">`;
+    } else {
+      wrap.innerHTML = `<div class="${placeholderClass}">${placeholderText}</div>`;
+    }
+  }
+
+  function setVideo(wrapId, url) {
+    const wrap = g(wrapId);
+    if (!wrap) return;
+    if (url) {
+      wrap.className = 'video-wrap';
+      wrap.innerHTML = `<iframe src="${escAttr(url)}" allowfullscreen></iframe>`;
+    } else {
+      wrap.className = 'video-placeholder';
+      wrap.textContent = '🎬 Vidéo embed';
+    }
+  }
+
+  function setHeroImg(wrapId, url, title, subtitle) {
+    const wrap = g(wrapId);
+    if (!wrap) return;
+    if (url) {
+      wrap.className = 'hero';
+      wrap.innerHTML = `
+        <img src="${escAttr(url)}" alt="${escAttr(title)}" onerror="this.parentElement.innerHTML='<div class=\\'hero-placeholder\\'>🖼 Image principale</div>'">
+        <div class="hero-overlay">
+          <h2>${escHtml(title)}</h2>
+          <div class="sub">${escHtml(subtitle)}</div>
+        </div>`;
+    } else {
+      wrap.className = 'hero';
+      wrap.innerHTML = `<div class="hero-placeholder">🖼 Image principale</div>`;
+    }
+  }
+
+  function miniPreview(input, previewId) {
+    const img = g(previewId);
+    if (!img) return;
+    if (input.value.trim()) {
+      img.src = input.value.trim();
+      img.style.display = 'block';
+      img.onerror = () => { img.style.display = 'none'; };
+    } else {
+      img.style.display = 'none';
+    }
+  }
+
+  function copyHTML(blockId, btn) {
+    const html = g(blockId).innerHTML;
+    navigator.clipboard.writeText(html).then(() => {
+      btn.textContent = 'Copié ✓';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copier HTML'; btn.classList.remove('copied'); }, 2000);
+    }).catch(() => alert('Impossible de copier.'));
+  }
+
+  function resetAll() {
+    ['f-title','f-subtitle','f-desc-short','f-desc-long',
+     'f-img','f-thumb','f-video',
+     'f-cta-url','f-cta-text','f-link-url','f-link-text']
+      .forEach(id => { const el = g(id); if (el) el.value = ''; });
+    ['prev-img-main','prev-img-thumb']
+      .forEach(id => { const el = g(id); if (el) el.style.display = 'none'; });
+    updateAll();
+  }
+
+  function escAttr(s) { return s.replace(/"/g,'&quot;'); }
+  function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  /* init */
+  updateAll();
+</script>
+</body>
+</html>
